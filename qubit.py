@@ -2,32 +2,48 @@ import random
 import math
 import cmath
 import numpy as np
-from gates import Gate, PauliX
+from gates import *
 
 class Qubit:
 
     def __init__(self):
-        self.theta = math.pi*random.random()
-        self.phi = 2*math.pi*random.random()
-        self.zero_ket = math.cos(self.theta/2)
-        self.one_ket = cmath.exp(1j * self.phi) * math.sin(self.theta/2)
+        # Initialize a qubit in a random state on the Bloch sphere
+        # theta and phi remain constant; only represent the initial state
+        self.__theta = math.pi*random.random()
+        self.__phi = 2*math.pi*random.random()
+        zero_ket = math.cos(self.__theta/2)
+        one_ket = cmath.exp(1j * self.__phi) * math.sin(self.__theta/2)
+        self.state = np.array([zero_ket, one_ket], dtype=complex)
+        self.collapsed = False
     
     def __repr__(self):
-        return f"Quantum State: {self.zero_ket}|0> + ({self.one_ket}|1>)"
+        return f"Quantum State: {self.state[0]}|0> + ({self.state[1]}|1>)"
 
-    def measure_std(self):
-        if random.random() < abs(self.zero_ket)**2:
-            return 0
-        return 1
+    def measure(self, basis: np.array = np.eye(2)):
+        # check unitary of basis
+        assert np.allclose(np.eye(len(basis)), basis @ np.array(basis).T.conj())
+        self.collapsed = True
+
+        new_state = basis @ self.get_state()
+        new_state = new_state / np.linalg.norm(new_state)
+
+        probs = np.abs(new_state)**2
+        outcome = np.random.choice([0, 1], p=probs)
+        collapsed_state = basis[outcome]
+        self.state = np.array([collapsed_state[0], collapsed_state[1]], dtype=complex)
+        
+        return
 
     def get_state(self):
-        return np.array([self.zero_ket, self.one_ket], dtype=complex)
+        return self.state
     
     def operate(self, g: Gate):
         assert np.allclose(np.eye(len(g)), g*g.T.conj())
         new_state = g*self.get_state()
         self.zero_ket = new_state[0]
         self.one_ket = new_state[1]
+        self.state = new_state
+        return
     
 
 if __name__ == "__main__":
@@ -37,18 +53,23 @@ if __name__ == "__main__":
     print(qubit)
     tot = 0
     gate = PauliX("px")
+    gate2 = Hadamard("H")
 
     for i in range(100):
         qubit = Qubit()
         norm = sum(abs(x)**2 for x in qubit.get_state())
         q_zero = qubit.get_state()[0]
         q_one = qubit.get_state()[1]
-        assert (norm < 1 + tol and norm > 1 - tol), f"{norm}"
-        if qubit.measure_std() == 1:
-            tot += 1
-        
         qubit.operate(gate)
-        assert (q_zero == qubit.zero_ket and q_one == qubit.one_ket)
+        qubit.operate(gate)
+        assert (q_zero == qubit.get_state()[0] and q_one == qubit.get_state()[1]), f"{q_zero}, {q_one}, {qubit.get_state()}"
+        assert (norm < 1 + tol and norm > 1 - tol), f"{norm}"
+        qubit.measure()
+        if qubit.get_state()[0] == 1:
+            tot += 1
+        print(qubit)
+        
+        
 
 
     print(tot)

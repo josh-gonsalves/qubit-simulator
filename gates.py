@@ -1,8 +1,5 @@
 import numpy as np
 
-ZERO = np.array((1, 0))
-ONE = np.array((0, 1))
-
 class Gate:
     def __init__(self, name, matrix: np.array):
         self.name = name
@@ -26,9 +23,21 @@ class Gate:
 
 class PauliX(Gate):
     def __init__(self, name):
-        print(np.column_stack((ZERO, ONE)))
-        super().__init__(name, np.column_stack((ZERO, ONE)))
+        super().__init__(name, np.array([[0, 1], [1, 0]]))
     
+class PauliY(Gate):
+    def __init__(self, name):
+        super().__init__(name, np.array([[0, -1j], [1j, 0]]))
+
+class PauliZ(Gate):
+    def __init__(self, name):
+        super().__init__(name, np.array([[1, 0], [0, -1]]))
+
+class Hadamard(Gate):
+    def __init__(self, name):
+        super().__init__(name, (1/np.sqrt(2)) * np.array([[1, 1], [1, -1]]))
+
+
     
     
     
