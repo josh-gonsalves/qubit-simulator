@@ -4,21 +4,35 @@ import cmath
 import numpy as np
 from gates import *
 
+
+"""
+
+"""
 class Qubit:
 
-    def __init__(self):
+    """
+        state: (Optional) unit-length np array containing the initial qubit state, initialized randomly if none passed.
+    """
+    def __init__(self, state: np.array = None):
         # Initialize a qubit in a random state on the Bloch sphere
         # theta and phi remain constant; only represent the initial state
-        self.__theta = math.pi*random.random()
-        self.__phi = 2*math.pi*random.random()
-        zero_ket = math.cos(self.__theta/2)
-        one_ket = cmath.exp(1j * self.__phi) * math.sin(self.__theta/2)
-        self.state = np.array([zero_ket, one_ket], dtype=complex)
+        if state is None:
+            self.__theta = math.pi*random.random()
+            self.__phi = 2*math.pi*random.random()
+            zero_ket = math.cos(self.__theta/2)
+            one_ket = cmath.exp(1j * self.__phi) * math.sin(self.__theta/2)
+            self.state = np.array([zero_ket, one_ket], dtype=complex)
+        else:
+            assert np.linalg.norm(state) == 1
+            self.state = np.array(state, dtype=complex)
         self.collapsed = False
     
     def __repr__(self):
         return f"Quantum State: {self.state[0]}|0> + ({self.state[1]}|1>)"
 
+    """
+        basis: measurement basis to project the qubit state onto
+    """
     def measure(self, basis: np.array = np.eye(2)):
         # check unitary of basis
         assert np.allclose(np.eye(len(basis)), basis @ np.array(basis).T.conj())
@@ -31,7 +45,6 @@ class Qubit:
         outcome = np.random.choice([0, 1], p=probs)
         collapsed_state = basis[outcome]
         self.state = np.array([collapsed_state[0], collapsed_state[1]], dtype=complex)
-        
         return
 
     def get_state(self):
@@ -49,7 +62,7 @@ class Qubit:
 if __name__ == "__main__":
     tol = 1e-6
 
-    qubit = Qubit()
+    qubit = Qubit(np.array([1,0], dtype=complex))
     print(qubit)
     tot = 0
     gate = PauliX("px")
@@ -68,8 +81,4 @@ if __name__ == "__main__":
         if qubit.get_state()[0] == 1:
             tot += 1
         print(qubit)
-        
-        
-
-
     print(tot)
