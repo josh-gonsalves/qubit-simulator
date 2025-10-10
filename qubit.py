@@ -6,16 +6,20 @@ from gates import *
 
 
 """
-
+    Qubit class representing a single qubit in a quantum system.
+    Attributes:
+        state: np array representing the qubit state in the computational basis.
+        collapsed: boolean indicating if the qubit has been measured.
 """
 class Qubit:
 
     """
-        state: (Optional) unit-length np array containing the initial qubit state, initialized randomly if none passed.
+        Constructs a Qubit object with state initialized randomly on the Bloch sphere if no state is provided.
+        Args:
+            state: (Optional) unit-length np array containing the initial qubit state, initialized randomly if none passed.
     """
     def __init__(self, state: np.array = None):
-        # Initialize a qubit in a random state on the Bloch sphere
-        # theta and phi remain constant; only represent the initial state
+        # theta and phi remain constant; only represent the initial state for debugging
         if state is None:
             self.__theta = math.pi*random.random()
             self.__phi = 2*math.pi*random.random()
@@ -31,7 +35,9 @@ class Qubit:
         return f"Quantum State: {self.state[0]}|0> + ({self.state[1]}|1>)"
 
     """
-        basis: measurement basis to project the qubit state onto
+        Measures the qubit along some basis, projecting the state onto one of the basis vectors.
+        Args:
+            basis: measurement basis to project the qubit state onto; dafaults to computational basis.
     """
     def measure(self, basis: np.array = np.eye(2)):
         # check unitary of basis
@@ -50,6 +56,9 @@ class Qubit:
     def get_state(self):
         return self.state
     
+    """
+        Applies a quantum gate to the qubit and updates its state.
+    """
     def operate(self, g: Gate):
         assert np.allclose(np.eye(len(g)), g*g.T.conj())
         new_state = g*self.get_state()
